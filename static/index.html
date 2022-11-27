@@ -47,15 +47,17 @@ world = {};
 //XXX: TODO Make this prettier!
 function drawCircle(context,entity) {
     with(context) {
-        beginPath();                
+        beginPath();              
         lineWidth = 3;
         var x = entity["x"];
         var y = entity["y"];
         //moveTo(x,y);
+        // Make outline black
+        strokeStyle = entity["black"];
         fillStyle = entity["colour"];
-        strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
-        stroke();                                
+        arc(x, y, (entity["radius"])?entity["radius"]:10, 0, 2.0 * Math.PI, false);
+        fill();
+        stroke();                              
     }
 }
 
@@ -64,7 +66,7 @@ function prepEntity(entity) {
         entity["colour"] = "#FF0000";
     }
     if (!entity["radius"]) {
-        entity["radius"] = 50;
+        entity["radius"] = 10;
     }
     return entity;
 }
@@ -125,6 +127,11 @@ function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just modified!
+    // socket.send(JSON.stringify({entity:data}));
+    new_entity = {};
+    new_entity[entity] = data;
+    socket.send(JSON.stringify(new_entity));
+
 }
 var counter = 0;
 function addEntityWithoutName(data) {
@@ -231,15 +238,15 @@ mouse = (function() {
 // Add the application specific mouse listeners!
 //XXX: TODO Make these prettier!
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'#3fabaf'});
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'#fd5825'});
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
+    addEntityWithoutName({'x':x,'y':y,'colour':'#f7efe5',
                           'radius':10});
 });
 
@@ -261,7 +268,12 @@ function wsSetup() {
     socket.onmessage = function(msg) {  
         try {
             debug("WebSocket Recv:" + msg.data);
-            //XXX: TODO What are you going to do here?            
+            //XXX: TODO What are you going to do here?
+            var data = JSON.parse(msg.data);
+            for (entity in data) {
+                world[entity] = data[entity];
+            }
+            drawNextFrame();            
         } catch (e) {
             alert("socket on message: " + e);
         }
@@ -273,8 +285,8 @@ wsSetup();
 
 
 
-// 30 frames per second
-setInterval( update, 1000/30.0);
+// 100 frames per second
+setInterval( update, 1000/100.0);
 
 
     </script>
